@@ -46,6 +46,10 @@ pipeline {
                 sh '''
                     docker network inspect "${DOCKER_NETWORK}" >/dev/null 2>&1 || \
                     docker network create "${DOCKER_NETWORK}"
+
+                    if docker container inspect postgres >/dev/null 2>&1; then
+                        docker network connect "${DOCKER_NETWORK}" postgres >/dev/null 2>&1 || true
+                    fi
                 '''
             }
         }
