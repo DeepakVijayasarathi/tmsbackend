@@ -4,7 +4,5 @@ obj/
 *.user
 *.suo
 TestResults/
-*.db
-*.db-shm
-*.db-wal
+*.db*
 .env
