@@ -13,7 +13,7 @@ pipeline {
 
         DOCKER_NETWORK = 'tms-network'
         HEALTH_IMAGE   = 'curlimages/curl:8.12.1'
-        PUBLIC_WEB_URL = 'http://localhost:8080'
+        PUBLIC_WEB_URL = 'https://tms.meettomanage.cloud'
         HOST_PORT      = '3300'
     }
 
