@@ -12,6 +12,7 @@ pipeline {
         DB_USER        = 'postgres'
 
         DOCKER_NETWORK = 'tms-network'
+        HEALTH_IMAGE   = 'curlimages/curl:8.12.1'
         PUBLIC_WEB_URL = 'http://localhost:8080'
         HOST_PORT      = '3300'
     }
@@ -86,16 +87,27 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
+                    set -eu
+
                     attempt=1
-                    until curl --fail --silent "http://127.0.0.1:${HOST_PORT}/api/v1/health" >/dev/null; do
+                    until docker run --rm \
+                      --network "${DOCKER_NETWORK}" \
+                      "${HEALTH_IMAGE}" \
+                      --fail --silent --show-error \
+                      "http://${CONTAINER_NAME}:8080/api/v1/health" >/dev/null; do
                         if [ "$attempt" -ge 12 ]; then
-                            docker logs --tail 100 "${CONTAINER_NAME}"
+                            echo "ERROR: Backend health check failed after ${attempt} attempts."
+                            docker ps --all --filter "name=^/${CONTAINER_NAME}$"
+                            docker logs --tail 100 "${CONTAINER_NAME}" || true
                             exit 1
                         fi
+
+                        echo "Waiting for backend health check... attempt ${attempt}/12"
                         sleep 5
                         attempt=$((attempt + 1))
                     done
 
+                    echo "Health check passed."
                     docker ps --filter "name=^/${CONTAINER_NAME}$" --filter status=running
                     docker logs --tail 50 "${CONTAINER_NAME}"
                 '''
